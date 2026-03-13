@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF - 8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雪花飘落效果</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #0a2a43, #1a3a5f);
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-top: 40px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .controls {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 40px auto;
+            max-width: 800px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .slider-container {
+            flex: 1;
+            min-width: 250px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4da6ff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(77, 166, 255, 0.8);
+        }
+
+        .value-display {
+            display: inline-block;
+            width: 40px;
+            text-align: center;
+            font-weight: bold;
+            color: #4da6ff;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            background-color: rgba(77, 166, 255, 0.2);
+            border: 2px solid #4da6ff;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: rgba(77, 166, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(77, 166, 255, 0.3);
+        }
+
+        #snowCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .info {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            line-height: 1.5;
+        }
+
+        .github-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .github-link:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .control-group {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .slider-container {
+                width: 100%;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="snowCanvas"></canvas>
+
+    <div class="container">
+        <h1>?? 雪花飘落模拟器 ??</h1>
+        <p class="subtitle">使用HTML5 Canvas创建的动态雪花效果，可自定义参数</p>
+
+        <div class="controls">
+            <div class="control-group">
+                <div class="slider-container">
+                    <label for="snowCount">雪花数量: <span id="countValue" class="value-display">150</span></label>
+                    <input type="range" id="snowCount" min="10" max="500" value="150">
+                </div>
+
+                <div class="slider-container">
+                    <label for="snowSpeed">飘落速度: <span id="speedValue" class="value-display">2</span></label>
+                    <input type="range" id="snowSpeed" min="0.5" max="5" step="0.1" value="2">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="slider-container">
+                    <label for="snowSize">雪花大小: <span id="sizeValue" class="value-display">5</span></label>
+                    <input type="range" id="snowSize" min="1" max="15" value="5">
+                </div>
+
+                <div class="slider-container">
+                    <label for="windStrength">风力强度: <span id="windValue" class="value-display">1</span></label>
+                    <input type="range" id="windStrength" min="0" max="3" step="0.1" value="1">
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button id="pauseBtn">暂停动画</button>
+                <button id="resetBtn">重置参数</button>
+                <button id="fullSnowBtn">暴风雪模式</button>
+            </div>
+        </div>
+
+        <div class="info">
+            <p>提示：您可以通过上方的滑块调整雪花数量、速度、大小和风力强度。</p>
+            <p>点击"暂停动画"可以暂停/继续雪花飘落，"重置参数"恢复默认设置，"暴风雪模式"体验密集雪花效果。</p>
+        </div>
+    </div>
+
+    <a href="https://github.com" class="github-link" target="_blank">获取源代码</a>
+
+    <script>
+        // 获取Canvas元素和上下文
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 设置Canvas尺寸为窗口大小
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        // 初始化Canvas尺寸
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // 雪花类
+        class Snowflake {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * parseFloat(document.getElementById('snowSize').value) + 1;
+                this.speed = Math.random() * parseFloat(document.getElementById('snowSpeed').value) + 0.5;
+                this.wind = (Math.random() - 0.5) * parseFloat(document.getElementById('windStrength').value);
+                this.opacity = Math.random() * 0.8 + 0.2;
+                this.wobble = Math.random() * 0.02;
+                this.wobbleSpeed = Math.random() * 0.05 + 0.01;
+                this.wobblePos = Math.random() * Math.PI * 2;
+            }
+
+            update() {
+                this.y += this.speed;
+                this.x += this.wind + Math.sin(this.wobblePos) * this.wobble;
+
+                // 更新摆动位置
+                this.wobblePos += this.wobbleSpeed;
+
+                // 如果雪花超出画布底部，重新从顶部开始
+                if (this.y > canvas.height) {
+                    this.y = -10;
+                    this.x = Math.random() * canvas.width;
+                }
+
+                // 如果雪花超出画布左侧或右侧，调整位置
+                if (this.x < -10) {
+                    this.x = canvas.width + 10;
+                } else if (this.x > canvas.width + 10) {
+                    this.x = -10;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.fill();
+
+                // 添加简单的雪花形状（六边形）
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i * Math.PI) / 3;
+                    const x1 = this.x + Math.cos(angle) * this.size;
+                    const y1 = this.y + Math.sin(angle) * this.size;
+                    const x2 = this.x + Math.cos(angle) * this.size * 1.5;
+                    const y2 = this.y + Math.sin(angle) * this.size * 1.5;
+
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(x1, y1);
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                }
+                ctx.strokeStyle = `rgba(255, 255, 255, ${this.opacity * 0.7})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        }
+
+        // 创建雪花数组
+        let snowflakes = [];
+        let animationId = null;
+        let isPaused = false;
+
+        // 初始化雪花
+        function initSnowflakes() {
+            const snowCount = parseInt(document.getElementById('snowCount').value);
+            snowflakes = [];
+
+            for (let i = 0; i < snowCount; i++) {
+                snowflakes.push(new Snowflake());
+            }
+        }
+
+        // 更新所有雪花
+        function updateSnowflakes() {
+            for (let i = 0; i < snowflakes.length; i++) {
+                snowflakes[i].update();
+            }
+        }
+
+        // 绘制所有雪花
+        function drawSnowflakes() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制所有雪花
+            for (let i = 0; i < snowflakes.length; i++) {
+                snowflakes[i].draw();
+            }
+        }
+
+        // 动画循环
+        function animate() {
+            if (!isPaused) {
+                updateSnowflakes();
+                drawSnowflakes();
+            }
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // 初始化雪花并开始动画
+        initSnowflakes();
+        animate();
+
+        // 控制面板交互
+        document.getElementById('snowCount').addEventListener('input', function() {
+            document.getElementById('countValue').textContent = this.value;
+            initSnowflakes();
+        });
+
+        document.getElementById('snowSpeed').addEventListener('input', function() {
+            document.getElementById('speedValue').textContent = this.value;
+            updateSnowflakeProperties();
+        });
+
+        document.getElementById('snowSize').addEventListener('input', function() {
+            document.getElementById('sizeValue').textContent = this.value;
+            updateSnowflakeProperties();
+        });
+
+        document.getElementById('windStrength').addEventListener('input', function() {
+            document.getElementById('windValue').textContent = this.value;
+            updateSnowflakeProperties();
+        });
+
+        // 更新现有雪花的属性
+        function updateSnowflakeProperties() {
+            for (let i = 0; i < snowflakes.length; i++) {
+                const snowflake = snowflakes[i];
+                const sizeInput = parseFloat(document.getElementById('snowSize').value);
+                const speedInput = parseFloat(document.getElementById('snowSpeed').value);
+                const windInput = parseFloat(document.getElementById('windStrength').value);
+
+                // 调整大小（保持相对比例）
+                snowflake.size = (snowflake.size / (sizeInput || 1)) * sizeInput;
+
+                // 调整速度（保持相对比例）
+                snowflake.speed = (snowflake.speed / (speedInput || 1)) * speedInput;
+
+                // 调整风力（保持相对比例）
+                snowflake.wind = (snowflake.wind / (windInput || 1)) * windInput;
+            }
+        }
+
+        // 暂停/继续按钮
+        document.getElementById('pauseBtn').addEventListener('click', function() {
+            isPaused = !isPaused;
+            this.textContent = isPaused ? '继续动画' : '暂停动画';
+        });
+
+        // 重置按钮
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            document.getElementById('snowCount').value = 150;
+            document.getElementById('snowSpeed').value = 2;
+            document.getElementById('snowSize').value = 5;
+            document.getElementById('windStrength').value = 1;
+
+            document.getElementById('countValue').textContent = 150;
+            document.getElementById('speedValue').textContent = 2;
+            document.getElementById('sizeValue').textContent = 5;
+            document.getElementById('windValue').textContent = 1;
+
+            initSnowflakes();
+            isPaused = false;
+            document.getElementById('pauseBtn').textContent = '暂停动画';
+        });
+
+        // 暴风雪模式按钮
+        document.getElementById('fullSnowBtn').addEventListener('click', function() {
+            document.getElementById('snowCount').value = 500;
+            document.getElementById('snowSpeed').value = 4;
+            document.getElementById('snowSize').value = 8;
+            document.getElementById('windStrength').value = 2;
+
+            document.getElementById('countValue').textContent = 500;
+            document.getElementById('speedValue').textContent = 4;
+            document.getElementById('sizeValue').textContent = 8;
+            document.getElementById('windValue').textContent = 2;
+
+            initSnowflakes();
+            isPaused = false;
+            document.getElementById('pauseBtn').textContent = '暂停动画';
+        });
+
+        // 页面可见性变化处理
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                isPaused = true;
+                document.getElementById('pauseBtn').textContent = '继续动画';
+            }
+        });
+    </script>
+</body>
+</html>
